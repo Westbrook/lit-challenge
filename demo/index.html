@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>lit-challenge demo</title>
+    <meta name="description" content="Demonstration of the multi-channel chat application represented by the `lit-challenge` element.">
+    <meta name="theme-color" content="#000000">
+
+    <!-- <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script> -->
+    <!-- <script type="module" src="../node_modules/@polymer/iron-demo-helpers/demo-pages-shared-styles.js"></script> -->
+    <!-- <script type="module" src="../node_modules/@polymer/iron-demo-helpers/demo-snippet.js"></script> -->
+
+    <script type="module" src="../src/lit-challenge.js"></script>
+
+    <custom-style>
+      <style is="custom-style" include="demo-pages-shared-styles">
+        .centered {
+          max-width: 100%;
+        }
+      </style>
+    </custom-style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic lit-challenge demo</h3>
+      <demo-snippet>
+        <!-- <template> -->
+          <lit-challenge></lit-challenge>
+        <!-- </template> -->
+      </demo-snippet>
+    </div>
+  </body>
+</html>

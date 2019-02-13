@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>lit-challenge test</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/@polymer/test-fixture/test-fixture.js"></script>
+    <script src="../node_modules/wct-mocha/wct-mocha.js"></script>
+
+    <script type="module" src="../src/lit-challenge.js"></script>
+  </head>
+  <body>
+
+    <test-fixture id="lit-challenge-tester">
+      <template>
+        <lit-challenge></lit-challenge>
+      </template>
+    </test-fixture>
+
+    <script type="module">
+      import '../node_modules/axe-core/axe.min.js';
+      import {axeReport} from '../node_modules/pwa-helpers/axe-report.js';
+
+      describe('lit-challenge', () => {
+        let should = chai.should();
+        let element;
+
+        beforeEach(async () => {
+          element = fixture('lit-challenge-tester');
+          await element.updateComplete;
+        });
+
+        it('a11y', function() {
+          return axeReport(element);
+        });
+      });
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/lit-challenge.js",
+  "lint": {
+    "rules": ["polymer-3"]
+  },
+  "extraDependencies": [
+    "node_modules/@polymer/iron-demo-helpers/**/*.js",
+    "node_modules/@webcomponents/**/*.js",
+    "node_modules/wct-browser-legacy/**/*.js",
+    "index.html",
+    "demo/*",
+    "src/*.js"
+  ],
+  "builds": [
+    {
+      "name": "es6-bundled",
+      "browserCapabilities": ["es2015"],
+      "js": {"minify": true, "compile": false},
+      "css": {"minify": true},
+      "html": {"minify": true},
+      "bundle": true,
+      "addServiceWorker": true,
+      "addPushManifest": false
+    }
+  ],
+  "moduleResolution": "node",
+  "npm": true
+}

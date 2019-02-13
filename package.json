@@ -1,0 +1,79 @@
+{
+  "name": "@westbrook/lit-challenge",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": "westbrook/lit-test",
+  "main": "lit-challenge.js",
+  "module": "lit-challenge.js",
+  "scripts": {
+    "grep": "grep -Ir --exclude=analysis.json --exclude-dir=node_modules --exclude-dir=coverage",
+    "analyze": "polymer analyze > analysis.json",
+    "preserve": "yarn analyze",
+    "serve": "polymer serve --open --open-path .",
+    "copy": "yarn copy:pages-dist && yarn copy:analysis",
+    "postcopy": "touch pages-dist/.nojekyll",
+    "copy:analysis": "cp analysis.json pages-dist/",
+    "copy:pages-dist": "cp -r build/default/ pages-dist/",
+    "prepages": "yarn analyze && polymer build && yarn copy",
+    "pages": "gh-pages -t -d pages-dist -m '[skip ci]'",
+    "postpages": "rimraf pages-dist && rimraf build",
+    "release": "release-it --config='config/.release-it.json'",
+    "postrelease": "yarn pages",
+    "lint": "yarn lint:styles && yarn lint:polymer && yarn lint:js && yarn lint:html",
+    "lint:styles": "yarn stylelint *styles.js",
+    "lint:polymer": "polymer lint",
+    "lint:js": "yarn eslint . --fix",
+    "lint:html": "yarn htmlhint --ignore **/node_modules/**",
+    "test": "polymer test --module-resolution=node --npm",
+    "update-settings": "scripty"
+  },
+  "devDependencies": {
+    "@polymer/iron-component-page": "^4.0.0",
+    "@polymer/iron-demo-helpers": "^3.0.0",
+    "@polymer/test-fixture": "^4.0.0",
+    "axe-core": "^3.0.0",
+    "babel-eslint": "^10.0.0",
+    "chai": "^4.1.2",
+    "eslint": "^5.0.0",
+    "eslint-config-google": "^0.11.0",
+    "gh-pages": "^2.0.0",
+    "htmlhint": "^0.10.0",
+    "husky": "^1.1.2",
+    "lint-staged": "^8.0.0",
+    "mocha": "^5.1.0",
+    "polymer-cli": "^1.9.0",
+    "pwa-helpers": "^0.9.0",
+    "release-it": "^10.0.0",
+    "stylelint": "^9.10.0",
+    "stylelint-config-standard": "^18.0.0",
+    "stylelint-config-styled-components": "^0.1.1",
+    "stylelint-processor-styled-components": "^1.5.0",
+    "wct-istanbub": "^0.2.1",
+    "wct-mocha": "^1.0.0"
+  },
+  "version": "0.0.0",
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*styles.js": [
+      "stylelint"
+    ],
+    "*.html": [
+      "polymer lint",
+      "htmlhint"
+    ]
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@webcomponents/webcomponentsjs": "latest",
+    "lit-element": "^2.0.0-rc.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  }
+}

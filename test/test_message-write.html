@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>message-write test</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/@polymer/test-fixture/test-fixture.js"></script>
+    <script src="../node_modules/wct-mocha/wct-mocha.js"></script>
+    <script src="../node_modules/sinon/pkg/sinon.js"></script>
+
+    <script type="module" src="../src/message-write.js"></script>
+  </head>
+  <body>
+
+    <test-fixture id="message-write-tester">
+      <template>
+        <message-write></message-write>
+      </template>
+    </test-fixture>
+
+    <script type="module">
+      import '../node_modules/axe-core/axe.min.js';
+      import {axeReport} from '../node_modules/pwa-helpers/axe-report.js';
+      import {messageEvents, messageStates} from '../src/machines-message.js';
+      import {worker} from '../src/worker-client.js';
+
+      describe('message-write', () => {
+        let should = chai.should();
+        let element;
+
+        beforeEach(async () => {
+          element = fixture('message-write-tester');
+          await element.updateComplete;
+        });
+
+        it('a11y', function() {
+          return axeReport(element);
+        });
+
+        context('image message', () => {
+          let button;
+          let input;
+          let clickSpy;
+          beforeEach(() => {
+            button = element.shadowRoot.querySelector('#file');
+            input = element.shadowRoot.querySelector('#image');
+            clickSpy = sinon.spy(input, 'click')
+          });
+          afterEach(() => {
+            clickSpy.restore();
+          });
+          it('forwards `button#file` clicks to `input[type="file"]`', () => {
+            button.click();
+            clickSpy.calledOnce.should.be.true;
+          });
+          it('resets the `input[type="file"]` value', () => {
+            let inputStub = sinon.stub(input, 'files').get(function getterFn() {
+              return ['one'];
+            });
+            let FileReaderStub = sinon.stub(window, 'FileReader').returns({
+              onloadend: function() {
+                element.postImage();
+              },
+              readAsDataURL: function() {
+                this.onloadend();
+              }
+            });
+            input.value.should.equal('');
+            input.type = 'text';
+            input.value = 'test';
+            input.value.should.equal('test');
+            input.dispatchEvent(new CustomEvent('change'));
+            input.value.should.equal('');
+            FileReaderStub.restore();
+            inputStub.restore();
+          });
+        });
+
+        context('text interaction', () => {
+          let input;
+          beforeEach(() => {
+            input = element.shadowRoot.querySelector('#message');
+          });
+          it(`moves state to ${messageStates.TYPE} on keydown`, async () => {
+            element.state.should.equal(messageStates.WAIT);
+            input.dispatchEvent(new CustomEvent('keydown'));
+            await element.updateComplete;
+            element.state.should.equal(messageStates.TYPE);
+          });
+          it(`moves state to ${messageStates.WAIT} on interval`, (done) => {
+            element.typingTimeout = 0;
+            element.state.should.equal(messageStates.WAIT);
+            input.dispatchEvent(new CustomEvent('keydown'));
+            element.updateComplete.then(() => {
+              element.state.should.equal(messageStates.TYPE);
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  element.state.should.equal(messageStates.WAIT);
+                  done();
+                });
+              });
+            });
+          });
+          it(`moves state to ${messageStates.WAIT} on blur`, async () => {
+            element.state = messageStates.TYPE;
+            await element.updateComplete;
+            element.state.should.equal(messageStates.TYPE);
+            input.dispatchEvent(new CustomEvent('blur'));
+            await element.updateComplete;
+            element.state.should.equal(messageStates.WAIT);
+          });
+        });
+
+        context('submit', () => {
+          let form;
+          let button;
+          let input;
+          let spy;
+          beforeEach(() => {
+            form =element.shadowRoot.querySelector('form');
+            button = element.shadowRoot.querySelector('#submit');
+            input = element.shadowRoot.querySelector('#message');
+            spy = sinon.spy(worker, 'postMessage');
+          });
+          afterEach(() => {
+            spy.restore();
+          });
+          it('does not post when the form is invalid', () => {
+            form.checkValidity().should.be.false;
+            button.click();
+            spy.notCalled.should.be.true;
+            form.dispatchEvent(new CustomEvent('submit'));
+            spy.notCalled.should.be.true;
+          });
+          it('does not post when the form is invalid', () => {
+            input.value = 'Test message.';
+            input.value.should.equal('Test message.');
+            form.checkValidity().should.be.true;
+            button.click();
+            spy.calledOnce.should.be.true;
+            input.value.should.equal('');
+          });
+        });
+      });
+    </script>
+
+  </body>
+</html>

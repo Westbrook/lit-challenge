@@ -1,0 +1,9 @@
+{
+  "generator-easy-wc": {
+    "promptValues": {
+      "authorName": "Westbrook",
+      "orgName": "westbrook",
+      "elementName": "lit-challenge"
+    }
+  }
+}

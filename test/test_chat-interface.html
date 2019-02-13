@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>lit-challenge test</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/@polymer/test-fixture/test-fixture.js"></script>
+    <script src="../node_modules/wct-mocha/wct-mocha.js"></script>
+
+    <script type="module" src="../src/chat-interface.js"></script>
+  </head>
+  <body>
+
+    <test-fixture id="chat-interface-tester">
+      <template>
+        <chat-interface></chat-interface>
+      </template>
+    </test-fixture>
+
+    <script type="module">
+      import '../node_modules/axe-core/axe.min.js';
+      import {axeReport} from '../node_modules/pwa-helpers/axe-report.js';
+      import {worker} from '../src/worker-client.js';
+      import {workerEvents} from '../src/interface-server.js';
+      import {messageEvents} from '../src/machines-message.js';
+
+      describe('chat-interface', () => {
+        let should = chai.should();
+        let element;
+
+        beforeEach(async () => {
+          element = fixture('chat-interface-tester');
+          await element.updateComplete;
+        });
+
+        it('a11y', function() {
+          return axeReport(element);
+        });
+
+        context('when the worker publishes a message', () => {
+          function getFormData() {
+            let formData = new FormData();
+            formData.set('user', 'Test User');
+            formData.set('message', 'This is a test message.');
+            return Array.from(formData);
+          }
+          afterEach((done) => {
+            const resetComplete = (e) => {
+              if (e.data.cmd !== 'RESET') return;
+              worker.removeEventListener('message', resetComplete);
+              requestAnimationFrame(() => {
+                done();
+              });
+            }
+            worker.addEventListener('message', resetComplete);
+            worker.postMessage({data: {cmd: 'RESET'}});
+          });
+          context('and the element is attached to the DOM', () => {
+            it('sets `messages`', (done) => {
+              element.messages.length.should.equal(0);
+              const updateReceived = (e) => {
+                if (!e.data.messages.length) return;
+                worker.removeEventListener('message', updateReceived);
+                e.data.messages.length.should.equal(1);
+                requestAnimationFrame(() => {
+                  element.messages.length.should.equal(1);
+                  done();
+                });
+              }
+              worker.addEventListener('message', updateReceived);
+              worker.postMessage({
+                data: {
+                  cmd: workerEvents.MESSAGE,
+                  message: getFormData()
+                }
+              });
+            });
+            it('does not display local user announcements', (done) => {
+              element.messages.length.should.equal(0);
+              element.user = 'Local Test User';
+              const updateReceived = (e) => {
+                worker.removeEventListener('message', updateReceived);
+                e.data.messages.length.should.equal(1);
+                element.messages.length.should.equal(1);
+                element.updateComplete.then(() => {
+                  let messages = element.shadowRoot.querySelector('.messages');
+                  messages.childElementCount.should.equal(0);
+                  done();
+                });
+              }
+              worker.addEventListener('message', updateReceived);
+              worker.postMessage({
+                data: {
+                  cmd: workerEvents.TYPE,
+                  user: 'Local Test User'
+                }
+              });
+            });
+            it('does display remote user announcements', (done) => {
+              element.messages.length.should.equal(0);
+              element.user = 'Local Test User';
+              const updateReceived = (e) => {
+                worker.removeEventListener('message', updateReceived);
+                e.data.messages.length.should.equal(1);
+                element.messages.length.should.equal(1);
+                element.updateComplete.then(() => {
+                  let messages = element.shadowRoot.querySelector('.messages');
+                  messages.childElementCount.should.equal(1);
+                  done();
+                });
+              }
+              worker.addEventListener('message', updateReceived);
+              worker.postMessage({
+                data: {
+                  cmd: workerEvents.TYPE,
+                  user: 'Remote Test User'
+                }
+              });
+            });
+          });
+          context('and the element is not attached to the DOM', () => {
+            it('does not set `messages`', (done) => {
+              element.messages.length.should.equal(0);
+              element.remove();
+              const updateReceived = (e) => {
+                worker.removeEventListener('message', updateReceived);
+                e.data.messages.length.should.equal(1);
+                requestAnimationFrame(() => {
+                  element.messages.length.should.equal(0);
+                  done();
+                });
+              }
+              worker.addEventListener('message', updateReceived);
+              worker.postMessage({
+                data: {
+                  cmd: workerEvents.MESSAGE,
+                  message: getFormData()
+                }
+              });
+            });
+          });
+        });
+
+
+      });
+    </script>
+
+  </body>
+</html>

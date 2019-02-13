@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>lit-challenge test</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/wct-mocha/wct-mocha.js"></script>
+  </head>
+  <body>
+
+    <script type="module">
+      import {messageEvents, messageStates, messageMachine, messageTransition}
+        from '../src/machines-message.js';
+
+      describe('machine-message', () => {
+        let should = chai.should();
+        let state;
+        let event;
+
+        it('defaults to initial', () => {
+          messageTransition(state, event).should.equal(messageMachine.initial);
+          for (event in messageEvents) {
+            messageTransition(state, event).should.equal(messageMachine.initial);
+          }
+        });
+
+        it('returns the current state when no transition is available', () => {
+          for (state in messageStates) {
+            messageTransition(state, 'MISSING_TRANSITION').should.equal(state);
+          }
+        });
+
+        it('accepts valid transitions and returns the new state', () => {
+          for (let state in messageStates) {
+            for (event in messageMachine.states[state].on) {
+              messageTransition(
+                state,
+                event
+              ).should.equal(messageMachine.states[state].on[event]);
+            }
+          }
+        });
+      });
+    </script>
+
+  </body>
+</html>
